@@ -4,6 +4,12 @@
 
 using namespace std;
 
+memcached_return_t dump(const memcached_st *ptr, const char *key, size_t key_length, void *context)
+{
+    cout << key << endl;
+    return MEMCACHED_SUCCESS;
+}
+
 int main(int argc, char ** argv)
 {
     const char * config_string = "--SERVER=127.0.0.1 --BINARY-PROTOCOL";
@@ -48,7 +54,7 @@ int main(int argc, char ** argv)
     const char * inc_key = "var1";
     uint64_t inc_variable = 0;
     
-    time_t now = time( NULL);
+    time_t now = time(NULL);
     struct tm now_tm = *localtime(&now);
     struct tm then_tm = now_tm;
     then_tm.tm_sec += 10;
@@ -68,5 +74,27 @@ int main(int argc, char ** argv)
     cout << inc_variable << endl;
     
     memcached_free(memc);
+    
+    // Showing keys from the server
+    
+    const char * config_text = "--SERVER=127.0.0.1";
+    memc = memcached(config_text, strlen(config_text));
+    
+    memcached_dump_fn p = &dump;
+    
+    rc = memcached_dump(memc, &p, NULL, 1);
+    
+    if (rc != MEMCACHED_SUCCESS)
+    {
+        cerr << "Memcached keys list error.\n" << memcached_strerror(memc, rc) << endl;
+        return 1;
+    }
+    else
+    {
+        cout << "Keys have been shown correctly.\n";
+    }
+    
+    memcached_free(memc);
+    
     return 0;
 }
